@@ -99,10 +99,10 @@
         NSLog(@"Value: %@", item.value ? @"YES" : @"NO");
     }];
     self.segmentItem = [RESegmentedItem itemWithTitle:@"Segmented" segmentedControlTitles:@[@"One", @"Two"] value:1 switchValueChangeHandler:^(RESegmentedItem *item) {
-        NSLog(@"Value: %i", item.value);
+        NSLog(@"Value: %li", (long)item.value);
     }];
     self.segmentItem2 = [RESegmentedItem itemWithTitle:nil segmentedControlImages:@[[UIImage imageNamed:@"Heart"], [UIImage imageNamed:@"Heart_Highlighted"]] value:0 switchValueChangeHandler:^(RESegmentedItem *item) {
-        NSLog(@"Value: %i", item.value);
+        NSLog(@"Value: %li", (long)item.value);
     }];
     self.segmentItem2.tintColor = [UIColor orangeColor];
     self.floatItem = [REFloatItem itemWithTitle:@"Float item" value:0.3 sliderValueChangeHandler:^(REFloatItem *item) {
@@ -141,7 +141,7 @@
         
         // Present options controller
         //
-        RETableViewOptionsController *optionsController = [[RETableViewOptionsController alloc] initWithItem:item options:options multipleChoice:NO completionHandler:^{
+        RETableViewOptionsController *optionsController = [[RETableViewOptionsController alloc] initWithItem:item options:options multipleChoice:NO completionHandler:^(RETableViewItem *selectedItem){
             [weakSelf.navigationController popViewControllerAnimated:YES];
             
             [item reloadRowWithAnimation:UITableViewRowAnimationNone]; // same as [weakSelf.tableView reloadRowsAtIndexPaths:@[item.indexPath] withRowAnimation:UITableViewRowAnimationNone];
@@ -172,9 +172,9 @@
         
         // Present options controller
         //
-        RETableViewOptionsController *optionsController = [[RETableViewOptionsController alloc] initWithItem:item options:options multipleChoice:YES completionHandler:^{
+        RETableViewOptionsController *optionsController = [[RETableViewOptionsController alloc] initWithItem:item options:options multipleChoice:YES completionHandler:^(RETableViewItem *selectedItem){
             [item reloadRowWithAnimation:UITableViewRowAnimationNone];
-            NSLog(@"%@", item.value);
+            NSLog(@"parent: %@, child: %@", item.value, selectedItem.title);
         }];
         
         // Adjust styles
@@ -238,9 +238,10 @@
 
 - (RETableViewSection *)addAccessories
 {
-    RETableViewSection *section = [RETableViewSection sectionWithHeaderTitle:@"Accessories"];
+    RETableViewSection *section = [RETableViewSection sectionWithHeaderTitle:@"Accessories" footerTitle:@"This section holds items with accessories."];
+
     [self.manager addSection:section];
-    
+
     // Add items to this section
     //
     [section addItem:[RETableViewItem itemWithTitle:@"Accessory 1" accessoryType:UITableViewCellAccessoryDisclosureIndicator selectionHandler:^(RETableViewItem *item) {
@@ -266,6 +267,9 @@
 - (RETableViewSection *)addCutCopyPaste
 {
     RETableViewSection *section = [RETableViewSection sectionWithHeaderTitle:@"Copy / pasting"];
+
+    section.footerTitle = @"This section holds items that support copy and pasting. You can tap on an item to copy it, while you can tap on another one to paste it.";
+
     [self.manager addSection:section];
     
     RETableViewItem *copyItem = [RETableViewItem itemWithTitle:@"Long tap to copy this item" accessoryType:UITableViewCellAccessoryNone selectionHandler:^(RETableViewItem *item) {

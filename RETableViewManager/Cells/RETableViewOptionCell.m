@@ -31,12 +31,22 @@
 
 @property (strong, readwrite, nonatomic) UILabel *valueLabel;
 
+@property (assign, readwrite, nonatomic) BOOL enabled;
+
 @end
 
 @implementation RETableViewOptionCell
 
+@synthesize item = _item;
+
 #pragma mark -
 #pragma mark Lifecycle
+
+- (void)dealloc {
+    if (_item != nil) {
+        [_item removeObserver:self forKeyPath:@"enabled"];
+    }
+}
 
 - (void)cellDidLoad
 {
@@ -55,6 +65,7 @@
 - (void)cellWillAppear
 {
     //[super cellWillAppear];
+    self.accessoryType = self.item.accessoryType;
     self.textLabel.backgroundColor = [UIColor clearColor];
     self.textLabel.text = self.item.title.length == 0 ? @" " : self.item.title;
     self.detailTextLabel.text = @"";
@@ -63,6 +74,8 @@
     if (!self.item.title) {
         self.valueLabel.textAlignment = NSTextAlignmentLeft;
     }
+    
+    self.enabled = self.item.enabled;
 }
 
 - (void)layoutSubviews
@@ -77,6 +90,38 @@
     
     if ([self.tableViewManager.delegate respondsToSelector:@selector(tableView:willLayoutCellSubviews:forRowAtIndexPath:)])
         [self.tableViewManager.delegate tableView:self.tableViewManager.tableView willLayoutCellSubviews:self forRowAtIndexPath:[self.tableViewManager.tableView indexPathForCell:self]];
+}
+
+#pragma mark -
+#pragma mark Handle state
+
+- (void)setItem:(RERadioItem *)item
+{
+    if (_item != nil) {
+        [_item removeObserver:self forKeyPath:@"enabled"];
+    }
+    
+    _item = item;
+    
+    [_item addObserver:self forKeyPath:@"enabled" options:NSKeyValueObservingOptionNew context:NULL];
+}
+
+- (void)setEnabled:(BOOL)enabled {
+    _enabled = enabled;
+    
+    self.userInteractionEnabled = _enabled;
+    
+    self.textLabel.enabled = _enabled;
+    self.valueLabel.enabled = _enabled;
+}
+
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
+{
+    if ([object isKindOfClass:[REBoolItem class]] && [keyPath isEqualToString:@"enabled"]) {
+        BOOL newValue = [[change objectForKey: NSKeyValueChangeNewKey] boolValue];
+        
+        self.enabled = newValue;
+    }
 }
 
 @end
